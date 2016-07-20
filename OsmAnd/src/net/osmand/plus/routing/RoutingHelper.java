@@ -285,8 +285,8 @@ public class RoutingHelper {
 	private Location setCurrentLocation(Location currentLocation, boolean returnUpdatedLocation, 
 			RouteCalculationResult previousRoute, boolean targetPointsChanged) {
 		Location locationProjection = currentLocation;
+		isDeviatedFromRoute = false;
 		if (finalLocation == null || currentLocation == null) {
-			isDeviatedFromRoute = false;
 			return locationProjection;
 		}
 		float posTolerance = POSITION_TOLERANCE;
@@ -313,6 +313,7 @@ public class RoutingHelper {
 					double dist = getOrthogonalDistance(currentLocation, routeNodes.get(currentRoute - 1), routeNodes.get(currentRoute));
 					if ((!settings.DISABLE_OFFROUTE_RECALC.get()) && (dist > (1.7 * posTolerance))) {
 						log.info("Recalculate route, because correlation  : " + dist); //$NON-NLS-1$
+						isDeviatedFromRoute = true;
 						calculateRoute = true;
 					}
 					if(dist > 350) {
@@ -326,6 +327,7 @@ public class RoutingHelper {
 				boolean wrongMovementDirection = checkWrongMovementDirection(currentLocation, next);
 				if ((!settings.DISABLE_WRONG_DIRECTION_RECALC.get()) && wrongMovementDirection && (currentLocation.distanceTo(routeNodes.get(currentRoute)) > (2 * posTolerance))) {
 					log.info("Recalculate route, because wrong movement direction: " + currentLocation.distanceTo(routeNodes.get(currentRoute))); //$NON-NLS-1$
+					isDeviatedFromRoute = true;
 					calculateRoute = true;
 				}
 				// 4. Identify if UTurn is needed
@@ -336,7 +338,7 @@ public class RoutingHelper {
 					boolean inRecalc = calculateRoute || isRouteBeingCalculated();
 					if (!inRecalc && !wrongMovementDirection) {
 						voiceRouter.updateStatus(currentLocation, false);
-					} else if(isDeviatedFromRoute){
+					} else if (isDeviatedFromRoute) {
 						voiceRouter.interruptRouteCommands();
 					}
 				}
@@ -567,7 +569,7 @@ public class RoutingHelper {
 				deviateFromRouteDetected = 0;
 			}
 		}
-		this.isDeviatedFromRoute = isOffRoute;
+		this.isDeviatedFromRoute = this.isDeviatedFromRoute || isOffRoute;
 		return isOffRoute;
 	}
 	
