@@ -285,8 +285,8 @@ public class RoutingHelper {
 	private Location setCurrentLocation(Location currentLocation, boolean returnUpdatedLocation, 
 			RouteCalculationResult previousRoute, boolean targetPointsChanged) {
 		Location locationProjection = currentLocation;
-		isDeviatedFromRoute = false;
 		if (finalLocation == null || currentLocation == null) {
+			isDeviatedFromRoute = false;
 			return locationProjection;
 		}
 		float posTolerance = POSITION_TOLERANCE;
@@ -294,8 +294,10 @@ public class RoutingHelper {
 			posTolerance = POSITION_TOLERANCE / 2 + currentLocation.getAccuracy();
 		}
 		boolean calculateRoute = false;
-		double distOrth = 0;
 		synchronized (this) {
+			isDeviatedFromRoute = false;
+			double distOrth = 0;
+
 			// 0. Route empty or needs to be extended? Then re-calculate route.
 			if(route.isEmpty()) {
 				calculateRoute = true;
@@ -312,7 +314,7 @@ public class RoutingHelper {
 				// >100m off current route (sideways)
 				if (currentRoute > 0) {
 					distOrth = getOrthogonalDistance(currentLocation, routeNodes.get(currentRoute - 1), routeNodes.get(currentRoute));
-					if ((!settings.DISABLE_OFFROUTE_RECALC.get()) && (distOrt > (1.7 * posTolerance))) {
+					if ((!settings.DISABLE_OFFROUTE_RECALC.get()) && (distOrth > (1.7 * posTolerance))) {
 						log.info("Recalculate route, because correlation  : " + distOrth); //$NON-NLS-1$
 						isDeviatedFromRoute = true;
 						calculateRoute = true;
