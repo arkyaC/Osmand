@@ -73,7 +73,7 @@ public class RoutingHelper {
 	private OsmandSettings settings;
 	
 	private RouteProvider provider;
-	private VoiceRouter voiceRouter;
+	private static VoiceRouter voiceRouter;
 
 	private boolean isDeviatedFromRoute = false;
 	private long deviateFromRouteDetected = 0;
