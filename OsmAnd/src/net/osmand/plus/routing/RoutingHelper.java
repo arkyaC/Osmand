@@ -294,6 +294,7 @@ public class RoutingHelper {
 			posTolerance = POSITION_TOLERANCE / 2 + currentLocation.getAccuracy();
 		}
 		boolean calculateRoute = false;
+		double distOrth = 0;
 		synchronized (this) {
 			// 0. Route empty or needs to be extended? Then re-calculate route.
 			if(route.isEmpty()) {
@@ -310,16 +311,11 @@ public class RoutingHelper {
 				// 2. Analyze if we need to recalculate route
 				// >100m off current route (sideways)
 				if (currentRoute > 0) {
-					double dist = getOrthogonalDistance(currentLocation, routeNodes.get(currentRoute - 1), routeNodes.get(currentRoute));
-					if ((!settings.DISABLE_OFFROUTE_RECALC.get()) && (dist > (1.7 * posTolerance))) {
-						log.info("Recalculate route, because correlation  : " + dist); //$NON-NLS-1$
+					distOrth = getOrthogonalDistance(currentLocation, routeNodes.get(currentRoute - 1), routeNodes.get(currentRoute));
+					if ((!settings.DISABLE_OFFROUTE_RECALC.get()) && (distOrt > (1.7 * posTolerance))) {
+						log.info("Recalculate route, because correlation  : " + distOrth); //$NON-NLS-1$
 						isDeviatedFromRoute = true;
 						calculateRoute = true;
-					}
-					if(dist > 350) {
-						if (isFollowingMode) {
-							voiceRouter.announceOffRoute(dist);
-						}
 					}
 				}
 				// 3. Identify wrong movement direction
@@ -333,13 +329,16 @@ public class RoutingHelper {
 				// 4. Identify if UTurn is needed
 				boolean uTurnIsNeeded = identifyUTurnIsNeeded(currentLocation, posTolerance);
 				// 5. Update Voice router
+				// Do not update in route planning mode
 				if (isFollowingMode) {
-					// don't update in route planing mode
 					boolean inRecalc = calculateRoute || isRouteBeingCalculated();
 					if (!inRecalc && !wrongMovementDirection) {
 						voiceRouter.updateStatus(currentLocation, false);
 					} else if (isDeviatedFromRoute) {
 						voiceRouter.interruptRouteCommands();
+					}
+					if (distOrth > 350) {
+						voiceRouter.announceOffRoute(distOrth);
 					}
 				}
 				
